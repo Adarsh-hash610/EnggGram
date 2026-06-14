@@ -1,27 +1,37 @@
 const express = require('express');
-const {adminAuth, userAuth} = require("./middlewares/auth.js");
-
+const connectDB = require('./config/database');
+const User = require('./models/user');
 const app = express();
 const PORT = 3000; 
 
-
-app.get("/getUserData",(req,res)=>{
+app.post('/signup',async(req,res)=>{
+    // creating a new instance of the User model
+    const user = new User({
+        firstName:"Sachin",
+        lastName:"Tendulkar",
+        emailId:"sachin@tendulkar.com",
+        age: 48,
+        password:"sachin@1234566",
+    })
     try{
-        // logic of DB call and get user data...
-        throw new Error("abcdjdf");
-        res.send("User data sent");
+        await user.save();
+        res.send("User Added successfully!!");
     }
     catch(err){
-        res.status(500).send("Some error occured!!");
+        res.status(400).send("Error saving the user: "+ err.message);
     }
 });
 
-app.use("/",(err,req,res,next)=>{
-    if(err){
-        res.status(500).send("Something went wrong!!");
-    }
-});
 
-app.listen(PORT,()=>{
+connectDB()
+.then(()=>{
+    console.log("Database connected successfully");
+    app.listen(PORT,()=>{
     console.log(`server is listening on port ${PORT}`);
 });
+})
+.catch(err =>{
+    console.log("Database connection faileddd!!!");
+})
+
+
