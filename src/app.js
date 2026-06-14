@@ -4,22 +4,23 @@ const {adminAuth, userAuth} = require("./middlewares/auth.js");
 const app = express();
 const PORT = 3000; 
 
-// Handle Auth Middleware for all GET, POST, ... requests
 
-app.use("/admin", adminAuth);
-
-app.use("/user", userAuth,(req,res) =>{
-    res.send("user data sent");
-} )
-
-app.get("/admin/getAllData",(req,res,next)=>{
-    console.log("Data sent successfully");
-    res.send("All data sent!!");
+app.get("/getUserData",(req,res)=>{
+    try{
+        // logic of DB call and get user data...
+        throw new Error("abcdjdf");
+        res.send("User data sent");
+    }
+    catch(err){
+        res.status(500).send("Some error occured!!");
+    }
 });
 
-app.get("/admin/deleteUser",(req,res,next)=>{
-    res.send("Deleted a user");
-})
+app.use("/",(err,req,res,next)=>{
+    if(err){
+        res.status(500).send("Something went wrong!!");
+    }
+});
 
 app.listen(PORT,()=>{
     console.log(`server is listening on port ${PORT}`);
