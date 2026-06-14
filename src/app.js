@@ -12,7 +12,7 @@ app.post('/signup',async(req,res)=>{
         emailId:"sachin@tendulkar.com",
         age: 48,
         password:"sachin@1234566",
-    })
+    });
     try{
         await user.save();
         res.send("User Added successfully!!");
