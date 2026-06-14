@@ -4,15 +4,13 @@ const User = require('./models/user');
 const app = express();
 const PORT = 3000; 
 
+app.use(express.json());
+
 app.post('/signup',async(req,res)=>{
+
+    // console.log(req.body);
     // creating a new instance of the User model
-    const user = new User({
-        firstName:"Sachin",
-        lastName:"Tendulkar",
-        emailId:"sachin@tendulkar.com",
-        age: 48,
-        password:"sachin@1234566",
-    });
+    const user = new User(req.body);
     try{
         await user.save();
         res.send("User Added successfully!!");
@@ -23,6 +21,7 @@ app.post('/signup',async(req,res)=>{
 });
 
 
+
 connectDB()
 .then(()=>{
     console.log("Database connected successfully");
@@ -31,7 +30,7 @@ connectDB()
 });
 })
 .catch(err =>{
-    console.log("Database connection faileddd!!!");
+    console.log("Database connection failed!!");
 })
 
 
