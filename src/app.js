@@ -6,6 +6,7 @@ const bcrypt = require('bcrypt');
 const validator = require('validator');
 const cookieParser = require('cookie-parser');
 const jwt = require('jsonwebtoken');
+const {userAuth} = require('./middlewares/auth');
 const app = express();
 const PORT = 3000; 
 
@@ -39,7 +40,7 @@ app.post('/signup',async(req,res)=>{
     }
 });
 
-app.post('/login',async(req,res)=>{
+app.post('/login', async(req,res)=>{
     try {
         const {emailId, password} = req.body;
         if(!validator.isEmail(emailId))
@@ -52,14 +53,16 @@ app.post('/login',async(req,res)=>{
                 throw new Error("Invalid Credentials!!");
             }
             else{
-                const isPasswordValid = await bcrypt.compare(password,user.password);
+                const isPasswordValid = await user.validatePassword(password);
                 if(isPasswordValid){
 
                     // Create a JWT token...
-                    const token = await jwt.sign({_id:user._id},"Engg@GRAM8090");
+                    const token = await user.getJWT();
 
                     // Add the token to cookie and send the response back to the user...
-                    res.cookie("token",token);
+                    res.cookie("token",token,
+                        {expires:new Date(Date.now()+ 7*3600000)}
+                    );
                     res.send("login successfully");
                 }
                 else{
@@ -73,115 +76,24 @@ app.post('/login',async(req,res)=>{
     }
 });
 
-app.get('/profile',async(req,res)=>{
+app.get('/profile',userAuth,async(req,res)=>{
     try{
-
-    const cookies = await req.cookies;
-
-    const {token} = cookies;
-    if(!token){
-        throw new Error("Invalid Token");
-    }
-
-    // validate my token...
-
-    const decodedMessage = await jwt.verify(token, "Engg@GRAM8090");
-    const {_id} = decodedMessage;
-
-    const user = await User.findById(_id);
-    if(!user){
-        throw new Error("Login again");
-    }
-    res.send(user);
+        const user = req.user;
+        res.send(user);
     }
     catch(err){
         res.status(400).send("ERROR "+err.message);
     }
 })
 
-// get user by email...
-app.get('/user', async(req,res)=>{
-    const userEmail = req.body.emailId;
+app.post("/sendConnectionRequest",userAuth, async(req,res)=>{
+    const user = req.user;
+    // sending a connection request...
+    console.log("sending a connection request");
 
-    try{
-        const users = await User.find({emailId:userEmail});
-        if(users.length === 0)
-        {
-            res.status(404).send("User not found");
-        }
-        else{
-            res.send(users);
-        }
-    }
-    catch(err)
-    {
-        res.status(400).send("Something went wrong!!");
-    }
-});
-
-// Feed API - GET/feed - get all the user from the database
-app.get('/feed',async (req,res)=>{
-    try {
-        const users = await User.find({});
-        if(users.length === 0)
-        {
-            res.status(404).send("User not found");
-        }
-        else{
-            res.send(users);
-        }
-        
-    } catch (err) {
-        res.status(400).send("something went wrong");
-        
-    }
-});
-
-app.delete('/user', async (req,res)=>{
-    const userId = req.body.userId;
-    try{
-        const user = await User.findByIdAndDelete(userId);
-        res.send("User delete successfully");
-    }
-    catch(err){
-        res.status(400).send("something went wrong!!");
-
-    }
-});
-
-app.patch('/user/:userId', async (req,res)=>{
-    const userId = req.params?.userId;
-    const data = req.body;
-
-    try {
-        const ALLOWED_UPDATES = [
-            // userId,
-            "photoUrl",
-            "about",
-            "gender",
-            "age",
-            "skills",
-        ];
-        const isUpdateAllowed = Object.keys(data).every((k)=>
-            ALLOWED_UPDATES.includes(k));
-
-        if(!isUpdateAllowed){
-            throw new Error("Update not allowed");
-        }
-        if(data?.skills.length >10){
-            throw new Error("Skill Limit exceeded!!");
-        }
-        const user = await User.findByIdAndUpdate({_id:userId},data,{
-            returnDocument:"after",
-            runValidators:true,
-        });
-        console.log(user);
-        res.send("User updated successfully");
-    } catch (err) {
-        res.status(400).send("something went wrong!!"+err.message);        
-    }
-});
-
+    res.send(user.firstName + " sent the connection request");
+    
+})
 
 connectDB()
 .then(()=>{
