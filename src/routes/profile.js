@@ -43,7 +43,7 @@ profileRouter.patch('/profile/password',userAuth, async (req,res)=>{
         {
             throw new Error("Use another Password!!");
         }
-        const hashnewPassword = await bcrypt.hash(newPassword,20);
+        const hashnewPassword = await bcrypt.hash(newPassword,10);
         user.password = hashnewPassword;
         await user.save();
         res.send("Password changed successfully")
