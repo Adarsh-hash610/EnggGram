@@ -34,7 +34,7 @@ connectionRequestSchema.pre("save", function(next){
     if(connectionRequest.fromUserId.equals(connectionRequest.toUserId)){
         throw new Error("Cannot send the connection request");
     }
-    next;
+    next();
 })
 
 const ConnectionRequestModel = new mongoose.model("ConnectionRequestModel", connectionRequestSchema);
